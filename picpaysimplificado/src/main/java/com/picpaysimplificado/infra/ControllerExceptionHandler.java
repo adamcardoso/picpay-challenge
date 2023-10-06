@@ -10,19 +10,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ControllerExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity threatDuplicateEntry(DataIntegrityViolationException exception){
+    public ResponseEntity<ExceptionDTO> threatDuplicateEntry(){
         ExceptionDTO exceptionDTO = new ExceptionDTO("Usuário já cadastrado", "400");
 
         return ResponseEntity.badRequest().body(exceptionDTO);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity threat404(EntityNotFoundException exception){
+    public ResponseEntity<ExceptionDTO> threat404(){
         return ResponseEntity.notFound().build();
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity threatGeneralExceptions(Exception exception){
+    public ResponseEntity<ExceptionDTO> threatGeneralExceptions(Exception exception){
         ExceptionDTO exceptionDTO = new ExceptionDTO(exception.getMessage(), "500");
 
         return ResponseEntity.internalServerError().body(exceptionDTO);
