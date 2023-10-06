@@ -1,22 +1,24 @@
-package com.picpaysimplificado.services;
+package com.picpaysimplificado.services.impl;
 
 import com.picpaysimplificado.domain.user.User;
 import com.picpaysimplificado.dtos.NotificationDTO;
-import org.springframework.http.HttpStatus;
+import com.picpaysimplificado.services.interfaces.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class NotificationService {
+public class NotificationServiceImpl implements NotificationService {
 
     private final RestTemplate restTemplate;
 
-    public NotificationService(RestTemplate restTemplate) {
+    public NotificationServiceImpl(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public void sendNotification(User user, String message) throws Exception {
+
+    @Override
+    public void sendNotification(User user, String message){
         String email = user.getEmail();
         NotificationDTO notificationRequest = new NotificationDTO(email, message);
 

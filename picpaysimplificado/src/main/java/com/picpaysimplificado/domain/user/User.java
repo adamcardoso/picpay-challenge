@@ -37,6 +37,5 @@ public class User {
         this.password = data.password();
         this.document = data.document();
         this.email = data.email();
-
     }
 }
