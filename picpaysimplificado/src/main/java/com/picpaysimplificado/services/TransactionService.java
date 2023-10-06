@@ -21,13 +21,16 @@ public class TransactionService {
 
     private final RestTemplate restTemplate;
 
-    public TransactionService(UserService userService, TransactionRepository transactionRepository, RestTemplate restTemplate) {
+    private final NotificationService notificationService;
+
+    public TransactionService(UserService userService, TransactionRepository transactionRepository, RestTemplate restTemplate, NotificationService notificationService) {
         this.userService = userService;
         this.transactionRepository = transactionRepository;
         this.restTemplate = restTemplate;
+        this.notificationService = notificationService;
     }
 
-    public void createTransaction(TransactionDTO transactionDTO) throws Exception {
+    public Transaction createTransaction(TransactionDTO transactionDTO) throws Exception {
         User sender = this.userService.findUserById(transactionDTO.senderId());
         User receiver = this.userService.findUserById(transactionDTO.receiverId());
 
@@ -51,6 +54,12 @@ public class TransactionService {
         transactionRepository.save(newTransaction);
         userService.saveUser(sender);
         userService.saveUser(receiver);
+
+        this.notificationService.sendNotification(sender, "Transação realizada com sucesso!");
+        this.notificationService.sendNotification(receiver, "Transação recebida com sucesso!");
+
+
+        return newTransaction;
     }
 
     public boolean authorizeTransaction(User sender, BigDecimal value){
