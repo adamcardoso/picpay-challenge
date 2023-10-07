@@ -39,32 +39,56 @@ public class TransactionServiceImpl implements TransactionService {
         User sender = this.userServiceImpl.findUserById(transactionDTO.senderId());
         User receiver = this.userServiceImpl.findUserById(transactionDTO.receiverId());
 
-        userServiceImpl.validateTransaction(sender, transactionDTO.value());
+        validateTransaction(sender, transactionDTO.value());
 
-        boolean isAuthorized = this.authorizeTransaction(sender, transactionDTO.value());
+        boolean isAuthorized = authorizeTransaction(sender, transactionDTO.value());
 
         if (!isAuthorized) {
             throw new UnauthorizedTransactionException("Transação não autorizada!");
         }
 
-        Transaction newTransaction = new Transaction();
-        newTransaction.setAmount(transactionDTO.value());
-        newTransaction.setSender(sender);
-        newTransaction.setReceiver(receiver);
-        newTransaction.setLocalDateTime(LocalDateTime.now());
+        Transaction newTransaction = createNewTransaction(sender, receiver, transactionDTO.value());
 
-        sender.setBalance(sender.getBalance().subtract(transactionDTO.value()));
-        receiver.setBalance(receiver.getBalance().add(transactionDTO.value()));
+        updateSenderAndReceiverBalances(sender, receiver, transactionDTO.value());
 
-        transactionRepository.save(newTransaction);
-        userServiceImpl.saveUser(sender);
-        userServiceImpl.saveUser(receiver);
+        saveTransactionAndUsers(newTransaction, sender, receiver);
 
-        this.notificationServiceImpl.sendNotification(sender, "Transação realizada com sucesso!");
-        this.notificationServiceImpl.sendNotification(receiver, "Transação recebida com sucesso!");
+        sendNotifications(sender, receiver);
 
         return newTransaction;
     }
+
+    private Transaction createNewTransaction(User sender, User receiver, BigDecimal value) {
+        Transaction newTransaction = new Transaction();
+        newTransaction.setAmount(value);
+        newTransaction.setSender(sender);
+        newTransaction.setReceiver(receiver);
+        newTransaction.setLocalDateTime(LocalDateTime.now());
+        return newTransaction;
+    }
+
+    private void validateTransaction(User sender, BigDecimal value) {
+        if (sender.getBalance().compareTo(value) < 0) {
+            throw new UnauthorizedTransactionException("Saldo insuficiente para a transação.");
+        }
+    }
+
+    private void updateSenderAndReceiverBalances(User sender, User receiver, BigDecimal value) {
+        sender.setBalance(sender.getBalance().subtract(value));
+        receiver.setBalance(receiver.getBalance().add(value));
+    }
+
+    private void saveTransactionAndUsers(Transaction transaction, User sender, User receiver) {
+        transactionRepository.save(transaction);
+        userServiceImpl.saveUser(sender);
+        userServiceImpl.saveUser(receiver);
+    }
+
+    private void sendNotifications(User sender, User receiver) {
+        notificationServiceImpl.sendNotification(sender, "Transação realizada com sucesso!");
+        notificationServiceImpl.sendNotification(receiver, "Transação recebida com sucesso!");
+    }
+
 
     public boolean authorizeTransaction(User sender, BigDecimal value) {
         ResponseEntity<Map<String, Object>> authorizationResponse = restTemplate.exchange(
