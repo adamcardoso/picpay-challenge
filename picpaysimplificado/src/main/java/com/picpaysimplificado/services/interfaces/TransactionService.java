@@ -9,6 +9,4 @@ import java.math.BigDecimal;
 public interface TransactionService {
 
     Transaction createTransaction(TransactionDTO transactionDTO);
-
-    boolean authorizeTransaction(User sender, BigDecimal value);
 }
